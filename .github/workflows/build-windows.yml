@@ -37,6 +37,21 @@ jobs:
           python -m pip install --upgrade pip
           pip install pyserial requests pyqt5 pyinstaller
 
+      - name: Download Android platform-tools (adb + fastboot)
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL -o platform-tools.zip \
+            https://dl.google.com/android/repository/platform-tools-latest-windows.zip
+          unzip -q platform-tools.zip
+          mkdir -p packaging/bin
+          cp platform-tools/adb.exe \
+             platform-tools/fastboot.exe \
+             platform-tools/AdbWinApi.dll \
+             platform-tools/AdbWinUsbApi.dll \
+             packaging/bin/
+          ls -la packaging/bin
+
       - name: Generate access hash + expiration
         shell: bash
         env:

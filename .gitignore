@@ -5,6 +5,11 @@ dist/
 # Build-time generated secrets — must never be committed
 packaging/access_hash.json
 
+# Build-time downloaded binaries (adb/fastboot)
+packaging/bin/
+platform-tools/
+platform-tools.zip
+
 # Python
 __pycache__/
 *.pyc

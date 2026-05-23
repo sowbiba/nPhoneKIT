@@ -12,6 +12,12 @@ from pathlib import Path
 
 if getattr(sys, "frozen", False):
     bundle = Path(sys._MEIPASS)
+
+    # Make bundled adb.exe / fastboot.exe discoverable to subprocess + shutil.which.
+    bin_dir = bundle / "bin"
+    if bin_dir.exists():
+        os.environ["PATH"] = str(bin_dir) + os.pathsep + os.environ.get("PATH", "")
+
     if sys.platform == "win32":
         base = Path(os.environ.get("LOCALAPPDATA", str(Path.home())))
     else:

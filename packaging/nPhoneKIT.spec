@@ -15,6 +15,12 @@ datas = [
     (os.path.join(SPECPATH, "access_hash.json"), "."),
 ]
 
+# Bundled Android platform-tools (adb.exe, fastboot.exe + DLLs).
+# The workflow stages them under packaging/bin/ before invoking PyInstaller.
+bin_src = os.path.join(SPECPATH, "bin")
+if os.path.isdir(bin_src):
+    datas.append((bin_src, "bin"))
+
 a = Analysis(
     [os.path.join(SPECPATH, "launcher.py")],
     pathex=[ROOT],
