@@ -10,6 +10,11 @@ packaging/bin/
 platform-tools/
 platform-tools.zip
 
+# Build-time downloaded Samsung USB driver installer
+packaging/installers/
+samsung_driver.zip
+samsung_driver_extracted/
+
 # Python
 __pycache__/
 *.pyc

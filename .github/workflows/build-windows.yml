@@ -52,6 +52,25 @@ jobs:
              packaging/bin/
           ls -la packaging/bin
 
+      - name: Download Samsung USB Driver installer
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p packaging/installers
+          curl -fsSL -o samsung_driver.zip \
+            "https://developer.samsung.com/SDP/file/a2fcaf64-7aa3-49f7-b06f-9e646590d528"
+          file samsung_driver.zip
+          # Samsung serves a .zip containing the installer .exe.
+          unzip -o samsung_driver.zip -d samsung_driver_extracted
+          installer=$(find samsung_driver_extracted -iname "*.exe" | head -n1)
+          if [ -z "$installer" ]; then
+            echo "::error::Samsung driver installer .exe not found in archive"
+            ls -R samsung_driver_extracted
+            exit 1
+          fi
+          cp "$installer" packaging/installers/samsung_usb_driver.exe
+          ls -la packaging/installers
+
       - name: Generate access hash + expiration
         shell: bash
         env:

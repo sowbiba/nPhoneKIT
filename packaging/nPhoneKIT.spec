@@ -21,6 +21,11 @@ bin_src = os.path.join(SPECPATH, "bin")
 if os.path.isdir(bin_src):
     datas.append((bin_src, "bin"))
 
+# Bundled third-party installers (Samsung USB Driver).
+installers_src = os.path.join(SPECPATH, "installers")
+if os.path.isdir(installers_src):
+    datas.append((installers_src, "installers"))
+
 a = Analysis(
     [os.path.join(SPECPATH, "launcher.py")],
     pathex=[ROOT],

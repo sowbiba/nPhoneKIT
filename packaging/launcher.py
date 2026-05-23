@@ -10,6 +10,7 @@ import hashlib
 import hmac
 import json
 import runpy
+import subprocess
 import sys
 import tkinter as tk
 from datetime import datetime, timezone
@@ -18,12 +19,75 @@ from tkinter import messagebox, simpledialog
 
 PBKDF2_ITERATIONS = 600_000
 MAX_ATTEMPTS = 3
+SAMSUNG_DRIVER_SERVICES = ("ssudbus", "sssbus", "ssudserd")
 
 
 def _bundle_dir() -> Path:
     if getattr(sys, "frozen", False):
         return Path(sys._MEIPASS)
     return Path(__file__).resolve().parent.parent
+
+
+def _samsung_driver_installed() -> bool:
+    """Return True if the Samsung Mobile USB Driver appears to be installed.
+
+    Detection is based on driver service registry entries. The Samsung suite
+    registers ssudbus (USB bus enumerator), sssbus (Smart Switch bus) and
+    ssudserd (serial). Presence of any one is enough to skip the prompt.
+    """
+    if sys.platform != "win32":
+        return True
+    import winreg
+
+    for service in SAMSUNG_DRIVER_SERVICES:
+        try:
+            with winreg.OpenKey(
+                winreg.HKEY_LOCAL_MACHINE,
+                rf"SYSTEM\CurrentControlSet\Services\{service}",
+            ):
+                return True
+        except OSError:
+            continue
+    return False
+
+
+def _ensure_samsung_driver(parent: tk.Misc) -> bool:
+    """If the Samsung driver is missing, launch the bundled installer.
+
+    Returns True if it's safe to proceed (driver installed or user dismissed).
+    The launcher already runs as admin (uac_admin in the spec), so the
+    installer process inherits elevation and won't prompt again.
+    """
+    if _samsung_driver_installed():
+        return True
+
+    installer = _bundle_dir() / "installers" / "samsung_usb_driver.exe"
+    if not installer.exists():
+        messagebox.showwarning(
+            "nPhoneKIT",
+            "Driver USB Samsung non détecté et installeur indisponible dans cette build. "
+            "Installez-le manuellement depuis developer.samsung.com avant de continuer.",
+            parent=parent,
+        )
+        return True  # proceed anyway — user may know what they're doing
+
+    messagebox.showinfo(
+        "nPhoneKIT",
+        "Driver USB Samsung non détecté.\n"
+        "L'installeur officiel Samsung va se lancer. "
+        "Suivez les étapes puis nPhoneKIT démarrera.",
+        parent=parent,
+    )
+    try:
+        subprocess.run([str(installer)], check=False)
+    except OSError as exc:
+        messagebox.showerror(
+            "nPhoneKIT",
+            f"Impossible de lancer l'installeur Samsung : {exc}",
+            parent=parent,
+        )
+        return False
+    return True
 
 
 def _verify(code: str, salt_hex: str, expected_hex: str) -> bool:
@@ -49,6 +113,9 @@ def _gate() -> bool:
                     root.iconbitmap(default=str(icon))
                 except tk.TclError:
                     pass
+
+        if not _ensure_samsung_driver(root):
+            return False
 
         if not hash_file.exists():
             messagebox.showerror(
