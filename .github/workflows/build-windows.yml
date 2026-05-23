@@ -9,7 +9,7 @@ on:
         default: "24"
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -83,3 +83,27 @@ jobs:
           path: dist/nPhoneKIT.exe
           if-no-files-found: error
           retention-days: 7
+
+      - name: Publish GitHub Release (rolling 'latest')
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          TAG="latest"
+          BUILD_TIME=$(date -u +"%Y-%m-%d %H:%M UTC")
+          EXPIRES_AT=$(python -c "import json; print(json.load(open('packaging/access_hash.json'))['expires_at'])")
+
+          # Idempotent: drop the previous rolling release + tag before recreating.
+          gh release delete "$TAG" --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag 2>/dev/null || true
+
+          gh release create "$TAG" dist/nPhoneKIT.exe \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "nPhoneKIT Windows (latest)" \
+            --latest \
+            --notes "Built: ${BUILD_TIME}
+          Expires: ${EXPIRES_AT}
+
+          Direct download: https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/nPhoneKIT.exe
+
+          An access code is required at launch. The .exe refuses to start after the expiration date above."
