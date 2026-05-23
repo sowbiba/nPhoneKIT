@@ -36,6 +36,14 @@ a = Analysis(
         "serial.tools",
         "serial.tools.list_ports",
         "requests",
+        # main.py imports these via runpy at runtime, so PyInstaller's static
+        # analysis of launcher.py would otherwise miss them.
+        "tkinter",
+        "tkinter.ttk",
+        "tkinter.font",
+        "tkinter.messagebox",
+        "tkinter.simpledialog",
+        "tkinter.filedialog",
     ],
     hookspath=[],
     runtime_hooks=[os.path.join(SPECPATH, "runtime_hook.py")],
