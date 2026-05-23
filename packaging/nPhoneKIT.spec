@@ -75,7 +75,7 @@ exe = EXE(
     strip=False,
     upx=False,
     runtime_tmpdir=None,
-    console=False,
+    console=True,
     icon=os.path.join(ROOT, "favicon.ico"),
     uac_admin=True,
 )
