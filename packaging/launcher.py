@@ -9,6 +9,7 @@ instantiates its own — Qt allows only one per process.
 import hashlib
 import hmac
 import json
+import multiprocessing
 import runpy
 import subprocess
 import sys
@@ -169,4 +170,8 @@ def main() -> int:
 
 
 if __name__ == "__main__":
+    # Required for multiprocessing.Process to work inside a PyInstaller
+    # --onefile bundle on Windows. Without it, child processes re-execute
+    # the bundle from the top and trip the access-code dialog in a loop.
+    multiprocessing.freeze_support()
     sys.exit(main())
