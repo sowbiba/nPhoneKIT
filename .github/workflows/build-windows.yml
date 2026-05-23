@@ -1,0 +1,58 @@
+name: Build Windows
+
+on:
+  workflow_dispatch:
+    inputs:
+      expires_hours:
+        description: "Validity window in hours (default 24)"
+        required: false
+        default: "24"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check ACCESS_CODE secret is set
+        shell: bash
+        env:
+          ACCESS_CODE: ${{ secrets.ACCESS_CODE }}
+        run: |
+          if [ -z "$ACCESS_CODE" ]; then
+            echo "::error::Repo secret ACCESS_CODE is not set. Add it via Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyserial requests pyqt5 pyinstaller
+
+      - name: Generate access hash + expiration
+        shell: bash
+        env:
+          ACCESS_CODE: ${{ secrets.ACCESS_CODE }}
+          EXPIRES_HOURS: ${{ inputs.expires_hours }}
+          OUT_PATH: packaging/access_hash.json
+        run: python packaging/gen_hash.py
+
+      - name: Build .exe
+        shell: bash
+        run: pyinstaller --clean --noconfirm packaging/nPhoneKIT.spec
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nPhoneKIT-windows
+          path: dist/nPhoneKIT.exe
+          if-no-files-found: error
+          retention-days: 7

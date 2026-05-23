@@ -1,0 +1,14 @@
+# PyInstaller build outputs
+build/
+dist/
+
+# Build-time generated secrets — must never be committed
+packaging/access_hash.json
+
+# Python
+__pycache__/
+*.pyc
+
+# Runtime
+tmp_output.txt
+tmp_output_adb.txt
